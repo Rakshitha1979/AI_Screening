@@ -1,0 +1,427 @@
+
+/* ==========================================
+   RECRUITMENT SUITE - MODERN DASHBOARD THEME
+   ========================================== */
+
+.stApp {
+    background: #F5F7FC;
+    color: #263449;
+    font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    max-width: 1450px;
+}
+
+/* MAIN HEADINGS */
+.main h1 {
+    color: #243B60;
+    font-weight: 750;
+    letter-spacing: -0.7px;
+}
+
+.main h2, .main h3 {
+    color: #31527F;
+    font-weight: 700;
+}
+
+/* ==========================================
+   SIDEBAR
+   ========================================== */
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #F0F4FC 0%, #F8FAFE 60%, #F1F5FC 100%);
+    border-right: 1px solid #E1E8F2;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    background: transparent;
+}
+
+/* BRAND AREA */
+.sidebar-brand {
+    text-align: center;
+    padding: 14px 10px 20px;
+    margin-bottom: 18px;
+    background: linear-gradient(145deg, #E5EEFC, #F5F7FE);
+    border: 1px solid #DCE6F5;
+    border-radius: 15px;
+}
+
+.sidebar-illustration {
+    position: relative;
+    width: 100px;
+    height: 76px;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #D6E5FC, #E9E0FC);
+    border-radius: 16px;
+}
+
+.illustration-icon {
+    font-size: 42px;
+}
+
+.illustration-document {
+    position: absolute;
+    right: 9px;
+    bottom: 5px;
+    font-size: 23px;
+    background: white;
+    border-radius: 8px;
+    padding: 3px;
+}
+
+.illustration-star {
+    position: absolute;
+    top: 5px;
+    right: 9px;
+    color: #8A75C8;
+    font-size: 20px;
+}
+
+.sidebar-brand-title {
+    color: #29466F;
+    font-size: 1.28rem;
+    font-weight: 750;
+    letter-spacing: -0.4px;
+}
+
+.sidebar-brand-subtitle {
+    color: #7788A2;
+    font-size: 0.77rem;
+    margin-top: 5px;
+    line-height: 1.5;
+}
+
+.sidebar-section-label {
+    color: #8795AA;
+    font-size: 0.70rem;
+    font-weight: 750;
+    letter-spacing: 1.1px;
+    margin: 15px 0 9px 8px;
+}
+
+/* NAVIGATION */
+[data-testid="stSidebar"] [role="radiogroup"] {
+    gap: 7px;
+}
+
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    background: rgba(255,255,255,0.65);
+    border: 1px solid #E6ECF5;
+    border-radius: 10px;
+    padding: 10px 12px;
+    transition: all 0.2s ease;
+}
+
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {
+    background: #E8F0FC;
+    border-color: #D2E0F5;
+}
+
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+    background: #E2ECFC;
+    border: 1px solid #C9DAF5;
+    box-shadow: 0 2px 7px rgba(65, 105, 170, 0.08);
+}
+
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) * {
+    color: #315FA8 !important;
+    font-weight: 700;
+}
+
+/* DATA STATUS PANEL */
+.sidebar-status {
+    margin-top: 24px;
+    padding: 15px 13px;
+    background: #FFFFFF;
+    border: 1px solid #E1E8F2;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(45, 70, 110, 0.045);
+}
+
+.sidebar-status-heading {
+    color: #405D85;
+    font-size: 0.85rem;
+    font-weight: 750;
+    padding-bottom: 12px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #EDF0F6;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #36B58A;
+    border-radius: 50%;
+    margin-right: 7px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 0;
+    border-bottom: 1px solid #F0F2F7;
+    font-size: 0.75rem;
+    color: #78869A;
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+.status-item strong {
+    color: #3E5D87;
+    font-size: 0.79rem;
+    font-weight: 750;
+}
+
+/* SIDEBAR FOOTER */
+.sidebar-footer {
+    text-align: center;
+    color: #929FB1;
+    font-size: 0.68rem;
+    line-height: 1.6;
+    padding: 17px 8px 8px;
+}
+
+/* ==========================================
+   KPI AND CONTENT CARDS
+   ========================================== */
+
+.metric-card {
+    position: relative;
+    overflow: hidden;
+    background: #FFFFFF;
+    border: 1px solid #E3EAF4;
+    border-radius: 13px;
+    padding: 20px 21px;
+    box-shadow: 0 3px 12px rgba(45, 70, 110, 0.055);
+    margin-bottom: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #5286D9, #48B8AD, #9B83D8);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 18px rgba(45, 70, 110, 0.09);
+}
+
+.metric-card-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #718096;
+    margin-bottom: 9px;
+}
+
+.metric-card-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #293F60;
+    line-height: 1.2;
+}
+
+.metric-card-sub {
+    font-size: 0.82rem;
+    color: #78869A;
+    margin-top: 7px;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background: #FFFFFF;
+    border-color: #E3EAF4 !important;
+    border-radius: 13px !important;
+    box-shadow: 0 2px 9px rgba(45, 70, 110, 0.04);
+}
+
+/* ==========================================
+   SECTION HEADERS
+   ========================================== */
+
+.section-header {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 10px 14px;
+    border-left: 4px solid #5485CE;
+    border-bottom: 1px solid #E1E8F2;
+    border-radius: 0 8px 8px 0;
+    background: linear-gradient(90deg, #EDF3FC, #F8FAFD);
+    color: #31527F;
+    font-weight: 750;
+    font-size: 1rem;
+}
+
+/* ==========================================
+   BADGES
+   ========================================== */
+
+.badge-match {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 650;
+    background: #E0F5EB;
+    color: #16805B;
+}
+
+.badge-missing {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 650;
+    background: #FCE9E9;
+    color: #B94B4B;
+}
+
+.badge-pill {
+    display: inline-block;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #EAF0FC;
+    color: #496BA6;
+    margin-right: 6px;
+    margin-bottom: 5px;
+}
+
+/* ==========================================
+   CALLOUTS
+   ========================================== */
+
+.info-callout {
+    background: #EFF5FD;
+    border-left: 4px solid #6392D5;
+    border-radius: 8px;
+    padding: 13px 16px;
+    font-size: 0.9rem;
+    color: #3B5D91;
+    margin-bottom: 1rem;
+}
+
+.alert-callout {
+    background: #FFF7ED;
+    border-left: 4px solid #E9AD58;
+    border-radius: 8px;
+    padding: 13px 16px;
+    font-size: 0.9rem;
+    color: #98652B;
+    margin-bottom: 1rem;
+}
+
+/* ==========================================
+   BUTTONS AND INPUTS
+   ========================================== */
+
+.stButton > button,
+.stFormSubmitButton > button {
+    border-radius: 9px;
+    font-weight: 650;
+    border: 1px solid #D3DEEF;
+    transition: all 0.2s ease;
+}
+
+.stButton > button:hover,
+.stFormSubmitButton > button:hover {
+    border-color: #648CCB;
+    color: #315FA8;
+    box-shadow: 0 3px 10px rgba(65, 105, 170, 0.10);
+}
+
+[data-baseweb="select"] > div,
+[data-baseweb="input"] > div {
+    border-radius: 9px;
+}
+
+/* ==========================================
+   EXPANDERS AND TABS
+   ========================================== */
+
+[data-testid="stExpander"] {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF4;
+    border-radius: 11px;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+}
+
+/* ==========================================
+   DATA TABLES
+   ========================================== */
+
+[data-testid="stDataFrame"] {
+    border: 1px solid #E3EAF4;
+    border-radius: 11px;
+    overflow: hidden;
+}
+
+/* ==========================================
+   CHARTS
+   ========================================== */
+
+[data-testid="stPlotlyChart"] {
+    background: #FFFFFF;
+    border: 1px solid #E5EBF4;
+    border-radius: 12px;
+    padding: 8px;
+}
+
+/* ==========================================
+   SMALL SCREEN SPACING
+   ========================================== */
+
+@media (max-width: 768px) {
+    .main .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .metric-card {
+        padding: 15px;
+    }
+}
+/* Darker and clearer sidebar data statistics */
+
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+    color: #334155 !important;
+    opacity: 1 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] strong {
+    color: #1E293B !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    color: #334155;
+}

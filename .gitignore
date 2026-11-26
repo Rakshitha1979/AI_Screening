@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+.env
+.venv
+env/
+venv/
+.idea/
+.vscode/
+.system_generated/
+outputs/embeddings/*.npy
+outputs/models/*.joblib
+# Dataset files
+data/*.csv
+
+# Generated files
+repomix-output.xml
+
+# Generated model and embedding files
+outputs/embeddings/
+outputs/models/

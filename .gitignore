@@ -20,3 +20,10 @@ repomix-output.xml
 # Generated model and embedding files
 outputs/embeddings/
 outputs/models/
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Generated frontend build
+frontend/dist/
+frontend/build/

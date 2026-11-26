@@ -1,2 +1,4 @@
 timestamp,candidate_id,job_id,job_title,recruiter_decision,ai_relevance_score,notes
 2026-11-15T09:21:01.583839,cand_00134,3651735073,Director of Finance,Relevant Candidate,0.46549999713897705,
+2026-11-26T13:25:59.889872,cand_06331,3651735073,Director of Finance,Suitable,0.49,Browser QA verified
+2026-11-26T14:01:47.530104,cand_05884,3651735073,Director of Finance,Suitable,0.4688,

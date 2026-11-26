@@ -1,190 +1,116 @@
 # AI-Assisted Candidate Screening Pipeline with Recruitment Analytics
 
-A professional, end-to-end recruitment technology platform integrating AI-based semantic resume screening and predictive recruitment analytics in one unified Streamlit dashboard.
+A professional, end-to-end recruitment technology platform integrating AI-based semantic resume screening and predictive recruitment analytics into a modern **React + FastAPI** web application.
 
-Built for local execution on Windows using open-source, local-first Python libraries with zero reliance on paid external APIs or cloud services.
-
----
-
-## 1. Project Overview & Architecture
-
-The platform bridges talent discovery and workforce decision science through two interconnected modules:
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                       RECRUITMENT SUITE APPLICATION                            │
-├──────────────────────────────────────┬─────────────────────────────────────────┤
-│        MODULE 1: AI RESUME SCREENING │   MODULE 2: IDA RECRUITMENT ANALYTICS   │
-├──────────────────────────────────────┼─────────────────────────────────────────┤
-│ • Full 9,544 Candidate Screening     │ • 15,000 Application Lifecycle Records │
-│ • SBERT (all-MiniLM-L6-v2) Embeddings│ • Stage Funnel & Monthly Inflow Trends │
-│ • TF-IDF Lexical Matching Baseline   │ • Sourcing Channel Conversion Analytics│
-│ • Transparent Skill-Gap Diagnostics  │ • 217 Timestamp Anomalies Isolated      │
-│ • Active Learning Uncertainty Queue  │ • Empirical Time-to-Acceptance Metrics │
-│ • Live Resume Document Upload (.pdf) │ • 4 Predictive Offer Models vs Baseline │
-│ • Human-in-the-Loop Audit Logging    │ • Responsible AI & Ethics Framework     │
-└──────────────────────────────────────┴─────────────────────────────────────────┘
-```
+Built for local execution on Windows using open-source, local-first Python and TypeScript libraries with zero reliance on paid external APIs or cloud services.
 
 ---
 
-## 2. Key Capabilities & Technical Innovations
+## 1. Architecture Overview
 
-### A. Full 9,544 Candidate Semantic Screening
-- **Dense High-Dimensional Representation:** Uses pretrained `sentence-transformers/all-MiniLM-L6-v2` generating 384-dimensional dense semantic vectors.
-- **Complete Talent Pool Indexing:** Indexes all **9,544 candidate resumes** and **1,167 job requisitions** on disk (`cv_embeddings_minilm.npy` and `job_embeddings_minilm.npy`) using batch processing (batch size 64) with unit L2-normalization for sub-millisecond cosine similarity ranking.
-- **Zero Runtime Re-encoding Latency:** Startup and screening across all 9,544 candidates execute instantaneously with zero GPU requirements.
+The application uses a decoupled full-stack architecture:
 
-### B. Dual-Criteria Active Learning Uncertainty Queue
-- **Decision Boundary Proximity:** Flags candidates whose semantic similarity score falls close to the operational threshold ($|s_{\text{sbert}} - 0.45| \le 0.05$).
-- **Neural/Lexical Divergence:** Flags candidates where semantic Sentence-BERT and lexical TF-IDF scores disagree significantly ($|s_{\text{sbert}} - s_{\text{tfidf}}| \ge 0.20$), uncovering candidates with strong transferable qualifications masked by vocabulary differences.
-- **Human-in-the-Loop Recruiter Review:** Presents pending candidates in an uncertainty review queue where recruiters submit decisions (`Suitable`, `Not Suitable`, `Needs Further Review`) with rationale notes.
-- **Audit Logging Without Concept Drift:** Feedback is logged into `outputs/recruiter_feedback.csv` to ensure auditable recordkeeping without automated unverified model retraining.
+- **Backend (`backend/`)**: **FastAPI** + **Pydantic v2** + **Uvicorn** serving the existing `ai_module/` and `ida_module/` Python ML pipelines. Datasets, precomputed Sentence-BERT embeddings (`all-MiniLM-L6-v2`), the TF-IDF baseline matcher, and IDA model evaluation results are loaded once into memory at startup via FastAPI `lifespan`.
+- **Frontend (`frontend/`)**: **React 18** + **TypeScript** + **Vite** + **Tailwind CSS** + **TanStack Query** + **Recharts**, using a Vite dev proxy (`/api` → `http://127.0.0.1:8000`).
+- **Legacy Streamlit UI**: Archived at `legacy_streamlit/app.py` (with `dashboard/` preserved for backwards-compatible tests).
 
-### C. Lexical & Predictive Baselines
-- **AI Matching Baseline:** Implements `TfidfBaselineMatcher` fitted on candidate resumes. Computes Spearman rank correlation, Pearson score correlation, and Top-K overlap to demonstrate semantic retrieval advantages over keyword filtering.
-- **Predictive Modeling Baseline:** Implements Scikit-learn's `DummyClassifier(strategy='most_frequent')` as an empirical reference point against Logistic Regression, Decision Tree, and Random Forest classifiers. Demonstrates why models with balanced class weighting are essential for detecting offer rejections given the 74.5% acceptance imbalance.
-
-### D. Data Integrity & Anomaly Isolation
-- **Domain-Aware Null Handling:** Preserves natural structural nulls corresponding to unreached pipeline stages.
-- **217 Timestamp Anomalies Isolated:** Isolates 217 corrupt records in the raw data where `accepted_at < offered_at` (e.g. recorded as accepting prior to offer issuance). Hiring velocity and duration metrics are computed strictly on the remaining 482 validated accepted offers.
+### Key Design Decisions
+- **JSON-Serializable Analytics Siblings**: Added `*_data()` functions in `ida_module/eda.py` returning plain Python JSON structures while keeping all original Plotly functions intact for existing unit tests.
+- **Thread-Safe Audit Log**: Writes to `outputs/recruiter_feedback.csv` are protected by a `threading.Lock`. Legacy `"Relevant Candidate"` entries are preserved when reading, while new submissions enforce canonical values (`"Suitable"`, `"Not Suitable"`, `"Needs Further Review"`).
+- **Consistent ID Serialization**: `candidate_id` and `job_id` are always serialized as strings in JSON so active-learning reviewed-status lookups match reliably.
 
 ---
 
-## 3. Dashboard Navigation & Usage Guide
+## 2. REST API Endpoints
 
-The application features six modular, interactive pages:
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Backend health check & loaded dataset/embedding counts |
+| `GET` | `/api/overview` | Live dataset counts & offer acceptance summary |
+| `GET` | `/api/jobs/categories` | Sorted list of job categories |
+| `GET` | `/api/jobs?category=` | Filtered list of job requisitions |
+| `GET` | `/api/jobs/{job_id}` | Full job details and parsed skill taxonomy |
+| `GET` | `/api/screening/rank?job_id=&top_n=15` | SBERT + TF-IDF ranking & skill-gap breakdown across all 9,544 resumes |
+| `GET` | `/api/screening/candidate/{candidate_id}?job_id=` | Candidate profile, full resume text & skill gap |
+| `GET` | `/api/screening/uncertain?job_id=` | Active Learning uncertainty queue (threshold `0.45 ± 0.05`, divergence `>= 0.20`) |
+| `GET` | `/api/screening/compare?job_id=&top_k=15` | Spearman/Pearson correlations, Top-K overlap & 300-point scatter sample |
+| `POST` | `/api/feedback` | Record recruiter review into `outputs/recruiter_feedback.csv` |
+| `GET` | `/api/feedback?job_id=` | Read recruiter feedback audit log |
+| `POST` | `/api/upload/screen` | Upload `.pdf` / `.docx` (max 10 MB) for live semantic screening & pool benchmark |
+| `POST` | `/api/upload/demo` | Run live screening demo with pre-configured senior engineer profile |
+| `GET` | `/api/analytics/{summary,funnel,monthly,sources,interviews,offers,roles,time}` | Chart-ready JSON for all IDA recruitment analytics |
+| `GET` | `/api/models` | 4-model evaluation metrics, confusion matrices, ROC curves & feature importances |
 
-### Page 1: Project Overview
-- **Executive KPIs:** Live counts of Candidate Resumes (9,544), Job Requisitions (1,167), Total Applications (15,000), and Confirmed Offers (938).
-- **Offer Summary:** Empirical breakdown of 699 Accepted (74.5%) vs. 239 Declined (25.5%) offers with interactive donut visualization.
-- **Module Summaries & Workflow:** Concise recruiter-oriented workflow illustrating resume matching and recruitment prediction pipelines.
-
-### Page 2: AI Resume Screening
-- **Requisition Selector:** Select from 1,167 preloaded job requisitions or view custom requirements.
-- **Full-Pool Candidate Ranking:** Displays top-ranked candidates across all 9,544 resumes with similarity scores and experience levels.
-- **Transparent Skill-Gap Analysis:** Explicitly identifies verified candidate skills alongside missing job requirements.
-- **Active Learning Uncertainty Review Queue:** Pending and reviewed tabs allowing recruiters to inspect flagged candidates and record review assessments.
-- **TF-IDF vs. SBERT Comparison:** Scatter plot and correlation metrics comparing lexical overlap with deep semantic understanding.
-
-### Page 3: Upload Resume
-- **Document Ingestion:** Drag-and-drop live resumes in **PDF** (via PyMuPDF) or **DOCX** (via python-docx) format.
-- **Integrity Validation:** Safely detects and reports corrupt files, password encryption, and scanned images lacking extractable text.
-- **Real-Time Screening:** Extracts candidate text, extracts competencies, generates real-time 384-d SBERT vector, and scores fit against selected requisition.
-- **Talent Pool Benchmark:** Plots the candidate's exact percentile ranking and score placement within the 9,544 existing candidate distribution.
-
-### Page 4: IDA Recruitment Analytics
-- **Pipeline Funnel Snapshot:** Distribution of 15,000 applicants across pipeline stages.
-- **Application Inflow:** Monthly submission volume trends over the recruitment lifecycle.
-- **Sourcing Channel Efficacy:** Volume vs. quality comparison (Referrals, Direct Outbound, LinkedIn, Job Boards).
-- **Evaluation Outcomes:** Pass, Fail, and Hold rates across interview rounds.
-- **Validated Hiring Velocity:** Accurate Time-to-Acceptance (mean 14.2 days) and Application-to-Acceptance (mean 37.8 days) distributions with anomaly exclusion notice.
-
-### Page 5: Model Comparison
-- **Executive Metric Table:** Side-by-side evaluation of Majority-Class Baseline, Logistic Regression, Decision Tree, and Random Forest on the identical 20% held-out test split (188 samples: 140 Accepted, 48 Declined).
-- **Comparative Multi-Bar Chart:** Visual comparison of Accuracy, Precision, Recall, F1-Score, and ROC-AUC.
-- **Confusion Matrices:** 4-panel diagnostic grid illustrating True Negatives (rejection detection) and True Positives.
-- **ROC Curves:** Discriminative ability across classification thresholds.
-- **Feature Importance:** Empirical drivers of candidate offer acceptance (salary alignment, interview score, experience).
+Interactive Swagger documentation is available at `http://127.0.0.1:8000/docs` when the backend is running.
 
 ---
 
-## 4. Model Evaluation Summary
-
-All models were evaluated on the identical 20% held-out test split ($N=188$):
-
-| Model | Accuracy | Precision | Recall | F1-Score | ROC-AUC | True Negatives (Declined Detected) |
-|---|---|---|---|---|---|---|
-| **Majority-Class Baseline** | 74.5% | 74.5% | 100.0% | 85.4% | 0.500 | 0 / 48 (0.0%) |
-| **Logistic Regression** | 51.6% | 76.9% | 50.0% | 60.6% | 0.587 | 27 / 48 (56.3%) |
-| **Decision Tree** | 48.9% | 70.8% | 53.6% | 61.0% | 0.456 | 17 / 48 (35.4%) |
-| **Random Forest** | 55.8% | 76.1% | 59.3% | 66.7% | 0.533 | 22 / 48 (45.8%) |
-
-> **Key Machine Learning Insight:** While the trivial Majority-Class Baseline shows an apparent 74.5% accuracy by blindly predicting "Accepted" for every candidate, it detects **0%** of offer rejections (ROC-AUC = 0.500). In contrast, balanced Logistic Regression and Random Forest successfully detect over 45%–56% of offer declines, providing genuine operational value for recruiters.
-
----
-
-## 5. Installation & Local Execution Guide
+## 3. Running Locally on Windows (PowerShell)
 
 ### Prerequisites
-- Python 3.10, 3.11, 3.12, 3.13, or 3.14 on Windows, macOS, or Linux.
+- **Python 3.10+** (tested on Python 3.14)
+- **Node.js 18+** & **npm** (tested on Node v24.12, npm 11.6)
 
 ### Step 1: Install Dependencies
-Open PowerShell or your command prompt in the project root:
-
 ```powershell
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+cd frontend
+npm install
+cd ..
 ```
 
-### Step 2: Launch the Streamlit Dashboard
+### Step 2: Start Both Servers
+Option A — Use the included launcher script:
 ```powershell
-streamlit run app.py
+.\run_dev.bat
 ```
 
-The application will start locally and open in your default browser at `http://localhost:8501`.
+Option B — Start manually in two PowerShell terminals:
 
-### Step 3: Run the Automated Test Suite
-To verify all AI modules, IDA pipelines, models, and dashboard pages:
+Terminal 1 (FastAPI Backend on port 8000):
+```powershell
+python -m uvicorn backend.main:app --reload --port 8000
+```
 
+Terminal 2 (React Vite Frontend on port 5173):
+```powershell
+cd frontend
+npm run dev
+```
+
+Open **`http://localhost:5173`** in your browser.
+
+---
+
+## 4. Automated Tests & Production Build
+
+Run the full Python test suite (AI modules, IDA modules, legacy dashboard tests, and FastAPI `TestClient` integration tests):
 ```powershell
 python -m unittest discover -s tests
 ```
 
----
-
-## 6. Project Directory Structure
-
-```text
-AI_Candidate_Screening/
-├── data/                                 # Datasets
-│   ├── cv.csv                            # 9,544 candidate profiles with skills & experience
-│   ├── job.csv                           # 1,167 job requisitions
-│   ├── matches.csv                       # 122,560 pre-computed reference match pairs
-│   └── IDA_Master_Recruitment_Dataset.csv # 15,000 application lifecycle records
-├── ai_module/                            # AI Resume Screening & NLP Module
-│   ├── resume_processing.py              # Text cleaning, normalization, and field parsing
-│   ├── nlp_processing.py                 # Linguistic preprocessing, tokenization, stopword removal
-│   ├── skill_extraction.py               # Skills taxonomy matching, degree & experience regex
-│   ├── sentence_bert.py                  # Pretrained SBERT loader, batching, disk caching
-│   ├── similarity.py                     # TF-IDF baseline, cosine similarity, model comparison
-│   ├── candidate_ranking.py              # Semantic ranking, Active Learning queue, audit logging
-│   └── resume_upload.py                  # PDF/DOCX text extraction, edge-case checks, live screening
-├── ida_module/                           # IDA Analytics & Offer Modeling Module
-│   ├── preprocessing.py                  # Pipeline cleaning, date validation, 217 anomaly isolation
-│   ├── eda.py                            # Funnel snapshot, monthly trends, channel analysis, time metrics
-│   ├── feature_engineering.py            # Pre-decision feature assembly, target encoding, leakage prevention
-│   ├── model_training.py                 # Logistic Regression, Decision Tree, Random Forest, DummyClassifier
-│   └── evaluation.py                     # Test set metrics, confusion matrices, ROC curves, feature impact
-├── dashboard/                            # Streamlit Dashboard UI
-│   ├── pages/                            # Modular page renderers
-│   │   ├── page1_overview.py             # Executive summary & KPI overview
-│   │   ├── page2_screening.py            # AI semantic candidate screening & Active Learning queue
-│   │   ├── page3_upload.py               # Live PDF/DOCX resume upload & talent pool benchmark
-│   │   ├── page4_analytics.py            # IDA recruitment funnel, channel ROI & velocity
-│   │   └── page5_models.py               # 4-model evaluation, confusion matrices & feature drivers
-│   ├── components/                       # Shared UI cards, metrics, and chart builders
-│   └── styles/                           # Professional recruiter CSS styling
-├── outputs/                              # Artifacts, embeddings & trained pipelines
-│   ├── cleaned_data/                     # Validated recruitment dataset
-│   ├── models/                           # Serialized joblib pipelines & evaluation results
-│   ├── embeddings/                       # Cached .npy Sentence-BERT vectors (9,544 CVs + 1,167 Jobs)
-│   └── recruiter_feedback.csv            # Active Learning human-in-the-loop feedback log
-├── tests/                                # Automated unit and integration test suite
-│   ├── test_phase2.py                    # AI resume screening & NLP tests
-│   ├── test_phase3.py                    # Similarity, ranking, and Active Learning tests
-│   ├── test_phase4.py                    # IDA data cleaning, feature engineering, and model tests
-│   └── test_dashboard.py                 # Full 6-page dashboard rendering execution tests
-├── app.py                                # Master Streamlit application entry point
-├── requirements.txt                      # Project dependency specification
-├── README.md                             # Complete project documentation
-└── .gitignore                            # Git exclusion rules
+Verify TypeScript types and Vite production build:
+```powershell
+cd frontend
+npx tsc --noEmit
+npm run build
 ```
 
 ---
 
-## 7. Responsible AI & Ethical Recruitment Standards
+## 5. Five Dashboard Pages (1:1 Feature Parity)
 
-1. **Demographic Proxy Elimination:** Sensitive personal attributes (gender, age, race, ethnicity, marital status, nationality) are strictly excluded from all screening representations and predictive models.
-2. **Advisory Decision Support:** AI semantic similarity scores represent contextual text alignment, not hiring suitability. Final shortlisting and hiring decisions remain strictly in human hands.
-3. **The Unstated Skill Principle:** Missing skills on a resume are treated as cues for interview investigation rather than definitive grounds for candidate disqualification.
-4. **Transparent Audit Logging:** Recruiter feedback from the Active Learning queue is logged separately in an audit log without unverified automatic retraining, preventing feedback loop bias and model drift.
+1. **Project Overview (`/`)**: Executive KPIs, Offer Decision Summary stacked bar, Core Platform Modules, and System Workflow.
+2. **AI Resume Screening (`/screening`)**: Category/job selector, Top-N ranked table with Semantic Match progress bars, Candidate Inspector, Recruiter Match Review audit form, Active Learning Uncertainty Queue (Pending/Reviewed), and TF-IDF vs. SBERT scatter comparison.
+3. **Upload Resume (`/upload`)**: Drag-and-drop `.pdf`/`.docx` ingestion (with corrupt, encrypted, scanned-PDF, and unsupported-type detection), Quick Demo mode, skill-gap diagnostics, and 30-bin talent pool benchmark placement.
+4. **Recruitment Analytics (`/analytics`)**: 5 KPIs, Pipeline Funnel, Monthly Application Volume, Sourcing Channel Efficacy, Interview & Offer Donuts, Role Family Distribution, and Hiring Velocity histograms with date-anomaly exclusion callout.
+5. **Model Comparison (`/models`)**: Held-out test metrics table (best per column highlighted), grouped bar chart, 4 model architecture cards (Majority-Class Baseline, Logistic Regression, Decision Tree, Random Forest), 4 confusion matrices, combined ROC curves, and interactive feature importance chart.
+
+---
+
+## 6. Responsible AI & Ethical Standards
+
+1. **Demographic Proxy Elimination**: Age, gender, race, nationality, and personal demographic attributes are strictly excluded from all scoring and modeling pipelines.
+2. **Advisory Decision Support**: Similarity scores measure contextual text relevance, not hiring suitability. Recruiters retain full decision authority.
+3. **The Unstated Skill Principle**: Missing skills on a resume serve as interview probing cues rather than automatic disqualification.
+4. **Auditable Feedback**: Recruiter reviews are logged to `outputs/recruiter_feedback.csv` without unverified automatic model retraining.

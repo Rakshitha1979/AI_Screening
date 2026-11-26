@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-canvas: #F5F7FC;
+  --text-body: #263449;
+  --text-heading: #243B60;
+  --text-subheading: #31527F;
+  --text-slate: #475569;
+  --text-muted: #64748B;
+  --border-subtle: #E2E8F0;
+  --border-card: #E3EAF4;
+  --accent-blue: #2563EB;
+  --accent-teal: #0D9488;
+  --success-emerald: #059669;
+  --success-green: #10B981;
+  --danger-red: #DC2626;
+  --danger-rose: #EF4444;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--text-body);
+}
+
+.metric-card-accent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #5286D9, #48B8AD, #9B83D8);
+}
+
+.sidebar-gradient {
+  background: linear-gradient(180deg, #F0F4FC 0%, #F8FAFE 60%, #F1F5FC 100%);
+}
+
+.brand-tile-gradient {
+  background: linear-gradient(145deg, #E5EEFC, #F5F7FE);
+}
+
+.section-header-bar {
+  border-left: 4px solid #5485CE;
+  border-bottom: 1px solid #E1E8F2;
+  background: linear-gradient(90deg, #EDF3FC, #F8FAFD);
+}

@@ -8,7 +8,7 @@ import unittest
 import pandas as pd
 import numpy as np
 
-from app import get_cached_datasets, get_cached_embeddings, get_cached_evaluation
+from legacy_streamlit.app import get_cached_datasets, get_cached_embeddings, get_cached_evaluation
 from dashboard.pages.page1_overview import render_page1
 from dashboard.pages.page2_screening import render_page2
 from dashboard.pages.page3_upload import render_page3

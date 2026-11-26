@@ -299,3 +299,162 @@ def get_time_analysis_figures(df: pd.DataFrame) -> Dict[str, Any]:
         "full_median": round(valid_full["application_to_accepted_days"].median(), 1),
         "anomalies_excluded": int((df["offer_date_anomaly"] == True).sum())
     }
+
+
+# ==============================================================================
+# JSON-SERIALIZABLE DATA FUNCTIONS FOR FASTAPI / REACT
+# ==============================================================================
+
+def get_recruitment_summary_data(df: pd.DataFrame) -> Dict[str, Any]:
+    """Plain JSON summary KPIs (no numpy/NaN types)."""
+    m = get_recruitment_summary_metrics(df)
+    acc_pct = float(m["acceptance_rate_pct"])
+    return {
+        "total_applications": int(m["total_applications"]),
+        "total_offers": int(m["total_offers"]),
+        "accepted_offers": int(m["accepted_offers"]),
+        "rejected_offers": int(m["rejected_offers"]),
+        "acceptance_rate_pct": round(acc_pct, 1),
+        "declined_rate_pct": round(100.0 - acc_pct, 1) if m["total_offers"] > 0 else 0.0,
+        "avg_time_to_acceptance_days": float(m["avg_time_to_acceptance_days"]),
+        "median_time_to_acceptance_days": float(m["median_time_to_acceptance_days"]),
+        "valid_tta_samples": int(m["valid_tta_samples"]),
+        "excluded_anomalies": int(m["excluded_anomalies"]),
+        "avg_full_hire_duration_days": float(m["avg_full_hire_duration_days"]),
+        "median_full_hire_duration_days": float(m["median_full_hire_duration_days"]),
+    }
+
+
+def get_recruitment_funnel_data(df: pd.DataFrame) -> list:
+    """Plain JSON stage counts in funnel order."""
+    stage_order = ["applied", "screened", "interview", "offer"]
+    counts = df["stage"].value_counts().reindex(stage_order).fillna(0).reset_index()
+    counts.columns = ["stage", "candidate_count"]
+    total = max(len(df), 1)
+    result = []
+    for _, row in counts.iterrows():
+        cnt = int(row["candidate_count"])
+        stage = str(row["stage"])
+        result.append({
+            "stage": stage,
+            "label": stage.capitalize(),
+            "candidate_count": cnt,
+            "percentage": round(cnt / total * 100.0, 1),
+        })
+    return result
+
+
+def get_monthly_application_trends_data(df: pd.DataFrame) -> list:
+    """Plain JSON monthly application counts."""
+    temp = df.copy()
+    temp["applied_at"] = pd.to_datetime(temp["applied_at"], errors="coerce")
+    temp = temp.dropna(subset=["applied_at"])
+    temp["year_month"] = temp["applied_at"].dt.to_period("M").astype(str)
+    monthly = temp.groupby("year_month").size().reset_index(name="application_count")
+    monthly = monthly.sort_values("year_month")
+    return [
+        {"year_month": str(r["year_month"]), "application_count": int(r["application_count"])}
+        for _, r in monthly.iterrows()
+    ]
+
+
+def get_source_analysis_data(df: pd.DataFrame) -> list:
+    """Plain JSON source channel metrics."""
+    source_stats = df.groupby("source").agg(
+        total_applications=("application_id", "count"),
+        offers_received=("offered_at", lambda s: s.notnull().sum()),
+        offers_accepted=("accepted", lambda s: (s == True).sum()),
+        offers_rejected=("accepted", lambda s: (s == False).sum()),
+    ).reset_index()
+    source_stats["offer_rate_pct"] = (
+        source_stats["offers_received"] / source_stats["total_applications"] * 100.0
+    ).round(2)
+    source_stats["acceptance_rate_pct"] = np.where(
+        source_stats["offers_received"] > 0,
+        (source_stats["offers_accepted"] / source_stats["offers_received"] * 100.0).round(1),
+        0.0,
+    )
+    source_stats = source_stats.sort_values("total_applications", ascending=False)
+    return [
+        {
+            "source": str(r["source"]),
+            "total_applications": int(r["total_applications"]),
+            "offers_received": int(r["offers_received"]),
+            "offers_accepted": int(r["offers_accepted"]),
+            "offers_rejected": int(r["offers_rejected"]),
+            "offer_rate_pct": float(r["offer_rate_pct"]),
+            "acceptance_rate_pct": float(r["acceptance_rate_pct"]),
+        }
+        for _, r in source_stats.iterrows()
+    ]
+
+
+def get_interview_outcomes_data(df: pd.DataFrame) -> list:
+    """Plain JSON interview round outcome counts."""
+    interviewed = df[df["interview_count"] > 0]
+    return [
+        {"outcome": "Pass", "count": int(interviewed["pass_count"].sum())},
+        {"outcome": "Fail", "count": int(interviewed["fail_count"].sum())},
+        {"outcome": "Hold", "count": int(interviewed["hold_count"].sum())},
+    ]
+
+
+def get_offer_outcome_distribution_data(df: pd.DataFrame) -> list:
+    """Plain JSON offer stage decisions (accepted vs declined)."""
+    offers = df[df["stage"] == "offer"]
+    acc_cnt = int((offers["accepted"] == True).sum())
+    dec_cnt = int((offers["accepted"] == False).sum())
+    return [
+        {"accepted": True, "label": f"Accepted ({acc_cnt})", "count": acc_cnt},
+        {"accepted": False, "label": f"Declined ({dec_cnt})", "count": dec_cnt},
+    ]
+
+
+def get_role_family_distribution_data(df: pd.DataFrame) -> list:
+    """Plain JSON role family counts sorted ascending for horizontal bar chart."""
+    role_counts = df["role_family"].value_counts().reset_index()
+    role_counts.columns = ["role_family", "count"]
+    role_counts = role_counts.sort_values("count", ascending=True)
+    return [
+        {"role_family": str(r["role_family"]), "count": int(r["count"])}
+        for _, r in role_counts.iterrows()
+    ]
+
+
+def _build_histogram_bins(values: np.ndarray, bins: int) -> list:
+    if len(values) == 0:
+        return []
+    counts, edges = np.histogram(values, bins=bins)
+    out = []
+    for i in range(len(counts)):
+        start = round(float(edges[i]), 2)
+        end = round(float(edges[i + 1]), 2)
+        out.append({
+            "bin_start": start,
+            "bin_end": end,
+            "label": f"{start:.1f}-{end:.1f}",
+            "count": int(counts[i]),
+        })
+    return out
+
+
+def get_time_analysis_data(df: pd.DataFrame) -> Dict[str, Any]:
+    """Plain JSON hiring velocity stats and histogram bins excluding date anomalies."""
+    valid_tta = df[df["time_to_acceptance_days"].notnull() & (df["offer_date_anomaly"] == False)]
+    valid_full = df[df["application_to_accepted_days"].notnull() & (df["offer_date_anomaly"] == False)]
+
+    tta_vals = valid_tta["time_to_acceptance_days"].to_numpy(dtype=float)
+    full_vals = valid_full["application_to_accepted_days"].to_numpy(dtype=float)
+
+    return {
+        "tta_count": int(len(valid_tta)),
+        "tta_mean": round(float(np.mean(tta_vals)), 1) if len(tta_vals) > 0 else 0.0,
+        "tta_median": round(float(np.median(tta_vals)), 1) if len(tta_vals) > 0 else 0.0,
+        "full_count": int(len(valid_full)),
+        "full_mean": round(float(np.mean(full_vals)), 1) if len(full_vals) > 0 else 0.0,
+        "full_median": round(float(np.median(full_vals)), 1) if len(full_vals) > 0 else 0.0,
+        "anomalies_excluded": int((df["offer_date_anomaly"] == True).sum()),
+        "tta_histogram": _build_histogram_bins(tta_vals, bins=25),
+        "full_histogram": _build_histogram_bins(full_vals, bins=30),
+    }
+
